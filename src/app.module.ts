@@ -1,9 +1,10 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ChannelsModule } from './channels/channels.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BullModule } from '@nestjs/bull';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { ChannelsMiddleware } from './channels/channels.middleware';
 
 @Module({
   imports: [
@@ -22,4 +23,10 @@ import { AppService } from './app.service';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(ChannelsMiddleware)
+      .forRoutes({ path: 'channels/:id', method: RequestMethod.PUT })
+  }
+}

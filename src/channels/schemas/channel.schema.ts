@@ -6,11 +6,15 @@ export type ChannelDocument = Channel & Document
 @Schema()
 export class Channel {
     @Prop()
+    _id: String
+    @Prop()
     title: String
     @Prop()
     url: String
     @Prop()
     description: String
+    @Prop()
+    email: String
     @Prop()
     country: String
     @Prop()
@@ -19,6 +23,8 @@ export class Channel {
     publishedAt: Date
     @Prop()
     subscriberCount: Number
+    @Prop()
+    socialLinks: String
     @Prop()
     viewCount: Number
     @Prop()
