@@ -1,5 +1,8 @@
-import { Controller, Param, Get, Post, Body, Delete, Put, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Param, Get, Post, Body, Delete, Put, HttpCode, HttpStatus, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { Express } from 'express'
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ChannelsService } from './channels.service';
+import { ChannelDto } from './dto/channel.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { Channel } from './schemas/channel.schema';
@@ -32,8 +35,15 @@ export class ChannelsController {
         return this.channelsService.remove(id);
     }
 
-    @Put(':id')
-    update(@Body() channel: UpdateChannelDto, @Param('id') id: string): Promise<Channel>{
-        return this.channelsService.update(id, channel);
+    @Put()
+    update(@Body() channel: ChannelDto, @Param('id') id: string): Promise<Channel>{
+        return this.channelsService.update(channel.id, channel);
+    }
+
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file'))
+    uploadFile(@UploadedFile() file: Express.Multer.File) {
+
+        return this.channelsService.sendQueue(file.buffer);
     }
 }

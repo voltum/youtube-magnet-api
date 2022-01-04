@@ -20,8 +20,6 @@ export class Channel {
     @Prop()
     language: String
     @Prop()
-    publishedAt: Date
-    @Prop()
     subscriberCount: Number
     @Prop()
     socialLinks: String
@@ -29,6 +27,10 @@ export class Channel {
     viewCount: Number
     @Prop()
     videoCount: Number
+    @Prop()
+    lastVideoPublishedAt: Date
+    @Prop()
+    publishedAt: Date
 }
 
 export const ChannelSchema = SchemaFactory.createForClass(Channel);
