@@ -43,19 +43,19 @@ export class ChannelsService {
         const job = await this.channelsQueue.add(
             {
                 id: 'UC111111111111111',               
-                url: 'https://www.youtube.com/channel/UClwTmoMI3r-iQOW0EnaXhaw',
+                url: 'https://www.youtube.com/channel/UCEkg0hhWS_oxD24f_6C9Qbw',
             },
         );
         const job2 = await this.channelsQueue.add(
             {
                 id: 'UC222222222222222',
-                url: 'https://www.youtube.com/user/superwooferdf',
+                url: 'https://www.youtube.com/channel/UCgv0PksMs_v',
             },
         );
         const job3 = await this.channelsQueue.add(
             {
                 id: 'UC333333333333333',
-                url: 'https://www.youtube.com/channel/UC3bwXp8SU6EqK3Bb6tYKbhQ',
+                url: 'https://www.youtube.com/channel/UCXKUWDBPjhhF1pWBVGno94A',
             },
         );
         Logger.log(`Job ${job.name} is sent to the queue`, 'ChannelsService')

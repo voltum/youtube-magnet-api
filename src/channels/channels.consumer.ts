@@ -23,7 +23,7 @@ export class ChannelsConsumer {
         // }, 800));
 
         try{
-            const res = await firstValueFrom(this.httpService.put('http://localhost:3000/channels', null, { params: { url } }));
+            const res = await firstValueFrom(this.httpService.put('http://localhost:3001/channels', null, { params: { url } }));
             await job.progress(progress);
             Logger.log(`Job ${job.data.id} is done!`, 'QueueProcessor');
         } catch (err) {
