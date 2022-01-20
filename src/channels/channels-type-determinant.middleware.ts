@@ -5,9 +5,11 @@ import { YTGetID } from 'src/utils/channels/channels';
 @Injectable()
 export class ChannelTypeDeterminant implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
-    const { url } = req.query;
+    const { url, folder } = req.query;
 
     try{
+        if(!folder) throw "Folder is not specified";
+
         const urlObject = new URL(String(url), 'https://youtube.com');
         let identificator = null
 

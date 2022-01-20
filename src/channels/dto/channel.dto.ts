@@ -1,5 +1,6 @@
 export class ChannelDto{
     readonly id: string
+    folder: string
     readonly title: string
     readonly url: string
     readonly description: string

@@ -4,18 +4,18 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { BullModule } from '@nestjs/bull';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CollectionsModule } from './collections/collections.module';
+import { FoldersModule } from './folders/folders.module';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
 
 @Module({
   imports: [
     ChannelsModule,
-    CollectionsModule,
+    FoldersModule,
     MongooseModule.forRoot('mongodb+srv://admin_ytmagnet:-Aa4RrAxPST7gMC@youtubemagnet.jkh1h.mongodb.net/YoutubeMagnet?retryWrites=true&w=majority'),
     BullModule.forRoot({
       redis: {
-        host: 'localhost',
+        host: 'redisdb',
         port: 6379,
       }
     }),

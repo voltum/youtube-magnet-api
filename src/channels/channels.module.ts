@@ -19,7 +19,7 @@ import { Channel, ChannelSchema } from './schemas/channel.schema';
         BullModule.registerQueue({
             name: 'channels',
             redis: {
-                host: 'localhost',
+                host: 'redisdb',
                 port: 6379
             }
         }),

@@ -1,11 +1,13 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document } from "mongoose";
 
-export type CollectionDocument = Collection & Document
+export type FolderDocument = Folder & Document
 
 @Schema()
-export class Collection {
+export class Folder {
     @Prop()
+    _id: String
+    @Prop({ required: true })
     name: String
     @Prop()
     code: String
@@ -13,4 +15,4 @@ export class Collection {
     createdAt: Date
 }
 
-export const CollectionSchema = SchemaFactory.createForClass(Collection);
+export const FolderSchema = SchemaFactory.createForClass(Folder);

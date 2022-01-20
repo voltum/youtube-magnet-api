@@ -8,6 +8,8 @@ export class Channel {
     @Prop()
     _id: String
     @Prop()
+    folder: string
+    @Prop()
     title: String
     @Prop()
     url: String

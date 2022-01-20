@@ -16,7 +16,7 @@ export async function YTGetID(url: string): Promise<string> {
     const page = await browser.newPage();
     await page.goto(url, {waitUntil: 'load', timeout: 0});
     Logger.log('Waiting for selector', 'IDScraper');
-    await page.waitForSelector(selector, { timeout: 1000 });
+    await page.waitForSelector(selector, { timeout: 5000 });
 
     id = await page.evaluate(function () {
       const meta = <HTMLMetaElement>document.querySelector("meta[itemprop='channelId']");
@@ -42,7 +42,7 @@ export async function YTScrapeLinks(identificator): Promise<object[]> {
     const page = await browser.newPage();
     await page.goto(`https://www.youtube.com/channel/${identificator}/about`, {waitUntil: 'load', timeout: 0});
     Logger.log('Waiting for selector', 'LinksScraper');
-    await page.waitForSelector("div#links-holder", { timeout: 1000 });
+    await page.waitForSelector("div#links-holder", { timeout: 5000 });
     await page.waitForTimeout(0);
   
     links = await page.evaluate(function () {
