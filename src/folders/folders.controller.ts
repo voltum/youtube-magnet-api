@@ -13,11 +13,13 @@ export class FoldersController {
     }
 
     @Get()
+    @UseFilters(MongoExceptionFilter)
     getAll(): Promise<any> {
         return this.foldersService.getAll();
     }
 
     @Get(':id')
+    @UseFilters(MongoExceptionFilter)
     getOne(@Param('id') id: string): Promise<Folder> {
         return this.foldersService.getById(id);
     }
@@ -31,11 +33,13 @@ export class FoldersController {
     }
 
     @Delete(':id')
+    @UseFilters(MongoExceptionFilter)
     remove(@Param('id') id: string): Promise<Folder>{
         return this.foldersService.remove(id);
     }
 
     @Put()
+    @UseFilters(MongoExceptionFilter)
     update(@Body() folder: FolderDto): Promise<Folder>{
         return this.foldersService.update(folder._id, folder);
     }

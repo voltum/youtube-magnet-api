@@ -6,7 +6,7 @@ import { EmailFinder, YTGetChannelInfo, YTLastVideo, YTScrapeLinks } from 'src/u
 @Injectable()
 export class ChannelsMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
-    const { identificator } = req.query;
+    const { identificator, chunkStamp } = req.query;
     const key = 'AIzaSyBquyODQDQl7mf82awWwWZzAUqYBkTRMgQ';
 
     await Promise.allSettled([YTGetChannelInfo(String(identificator), ['id', 'snippet','contentDetails','statistics'], key), YTScrapeLinks(identificator)])
@@ -32,7 +32,8 @@ export class ChannelsMiddleware implements NestMiddleware {
                 viewCount,
                 videoCount,
                 socialLinks: JSON.stringify(results[1].value),
-                publishedAt
+                publishedAt,
+                chunkStamp
             }
             Logger.log(`Main info about (${channels[0].id}) received: SUCCESS`, title)
             next();

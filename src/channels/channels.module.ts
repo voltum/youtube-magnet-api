@@ -10,6 +10,7 @@ import { ChannelsController } from './channels.controller';
 import { ChannelsMiddleware } from './channels.middleware';
 import { ChannelsService } from './channels.service';
 import { Channel, ChannelSchema } from './schemas/channel.schema';
+import { EventsGateway } from './channels.gateway';
 
 @Module({
     imports: [
@@ -19,7 +20,7 @@ import { Channel, ChannelSchema } from './schemas/channel.schema';
         BullModule.registerQueue({
             name: 'channels',
             redis: {
-                host: 'redisdb',
+                host: 'localhost',
                 port: 6379
             }
         }),
@@ -28,13 +29,14 @@ import { Channel, ChannelSchema } from './schemas/channel.schema';
         }),
         HttpModule
     ],
-    providers: [ChannelsService, ChannelsConsumer],
-    controllers: [ChannelsController]
+    providers: [ChannelsService, ChannelsConsumer, EventsGateway],
+    controllers: [ChannelsController],
+    exports: [ChannelsService]
 })
 export class ChannelsModule {
-    configure(consumer: MiddlewareConsumer) {
-      consumer
-        .apply(ChannelTypeDeterminant, ChannelsMiddleware, ChannelLastVideo)
-        .forRoutes({ path: 'channels', method: RequestMethod.PUT })
-    }
+    // configure(consumer: MiddlewareConsumer) {
+    //   consumer
+    //     .apply(ChannelTypeDeterminant, ChannelsMiddleware, ChannelLastVideo)
+    //     .forRoutes({ path: 'channels', method: RequestMethod.PUT })
+    // }
 }

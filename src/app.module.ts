@@ -12,10 +12,14 @@ import configuration from './config/configuration';
   imports: [
     ChannelsModule,
     FoldersModule,
-    MongooseModule.forRoot('mongodb+srv://admin_ytmagnet:-Aa4RrAxPST7gMC@youtubemagnet.jkh1h.mongodb.net/YoutubeMagnet?retryWrites=true&w=majority'),
+    MongooseModule.forRoot('mongodb+srv://admin_ytmagnet:-Aa4RrAxPST7gMC@youtubemagnet.jkh1h.mongodb.net/YoutubeMagnet?retryWrites=true&w=majority',
+      {
+        
+      }
+    ),
     BullModule.forRoot({
       redis: {
-        host: 'redisdb',
+        host: 'localhost',
         port: 6379,
       }
     }),

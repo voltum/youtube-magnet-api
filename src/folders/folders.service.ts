@@ -7,11 +7,16 @@ import { Folder, FolderDocument } from './schemas/folder.schema';
 import { google } from 'googleapis'
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { ChannelsService } from 'src/channels/channels.service';
 
 @Injectable()
 export class FoldersService {
 
-    constructor(@InjectModel(Folder.name) private folderModel: Model<FolderDocument>, @InjectConnection() private readonly connection: Connection){
+    constructor(
+        @InjectModel(Folder.name) private folderModel: Model<FolderDocument>, 
+        @InjectConnection() private readonly connection: Connection,
+        private readonly channelsService: ChannelsService
+        ){
 
     }
 
@@ -31,6 +36,9 @@ export class FoldersService {
     }
 
     async remove(id: string): Promise<Folder> {
+        const allFromFolder = await this.channelsService.getAll(id);
+        const deletedMany = await this.channelsService.removeMany(allFromFolder.map(channel => channel._id));
+        Logger.log(deletedMany, 'FoldersService')
         return this.folderModel.findByIdAndRemove(id);
     }
 

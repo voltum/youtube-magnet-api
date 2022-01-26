@@ -13,7 +13,7 @@ export class MongoExceptionFilter implements ExceptionFilter {
             Logger.error("Duplicate insertion, MongoDB", 'MongoExceptionFilter');
             response.status(HttpStatus.CONFLICT).json({
                 statusCode: HttpStatus.CONFLICT,
-                description: "Duplicate folder error"
+                description: "Duplicate exception"
             })
         break;
         default: 
@@ -21,7 +21,8 @@ export class MongoExceptionFilter implements ExceptionFilter {
                 statusCode: HttpStatus.NOT_ACCEPTABLE,
                 exceptionCode: exception.code,
                 description: "Unknown database error"
-            })
+            });
+            response.end();
         break;
     }
   }
