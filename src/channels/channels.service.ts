@@ -74,7 +74,7 @@ export class ChannelsService {
 
     async update(id: string, channel: ChannelDto): Promise<Channel> {
         Logger.log('Channel info sent to database', 'ChannelsService')
-        return this.channelModel.findByIdAndUpdate(id, channel, { new: true, upsert: true })
+        return this.channelModel.findByIdAndUpdate(id, channel, { new: true }) // upsert: true/false
     }
 
     async sendQueue(data: Array<string[]>, folder: string): Promise<Bull.Job<any>[]>{

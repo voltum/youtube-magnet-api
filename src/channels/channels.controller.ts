@@ -59,9 +59,8 @@ export class ChannelsController {
 
     @Put()
     @UseFilters(MongoExceptionFilter)
-    update(@Body() channel: ChannelDto, @Query('folder') folder: string): Promise<Channel>{
-        channel.folder = folder?.toLowerCase();
-        return this.channelsService.update(channel.id, channel);
+    update(@Query('id') id: string, @Body() channel: ChannelDto): Promise<Channel>{
+        return this.channelsService.update(id, channel);
     }
 
     @Post('upload')
