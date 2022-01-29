@@ -20,7 +20,7 @@ import { EventsGateway } from './channels.gateway';
         BullModule.registerQueue({
             name: 'channels',
             redis: {
-                host: 'localhost',
+                host: 'redisdb',
                 port: 6379
             }
         }),

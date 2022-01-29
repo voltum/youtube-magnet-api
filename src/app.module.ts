@@ -19,7 +19,7 @@ import configuration from './config/configuration';
     ),
     BullModule.forRoot({
       redis: {
-        host: 'localhost',
+        host: 'redisdb',
         port: 6379,
       }
     }),
