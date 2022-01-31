@@ -18,20 +18,30 @@ export class ChannelsConsumer {
     }
     
     @Process()
-    async readOperationJob(job:Job<{id: string, url: string, folder: string, chunkStamp: number}>): Promise<Channel>{
-        const { id, url, folder, chunkStamp } = job.data;
+    async readOperationJob(job:Job<{id: string, url: string, email: string, folder: string, chunkStamp: number, shouldUpdate: string}>): Promise<Channel>{
+        const { id, url, email, folder, chunkStamp, shouldUpdate: shouldUpdateString } = job.data;
         let progress = 0;
-        // const res = await firstValueFrom(this.httpService.put('http://localhost:3001/channels', null, { params: { url, folder, chunkStamp } }));
+        
+        let shouldUpdate: boolean = (shouldUpdateString === 'true');
+        Logger.log(`Should update: ${shouldUpdate}`, 'Job');
 
         // 1 step: determine channel ID
-        const ID = await DetermineChannelID(url, folder);
+        const ID = await DetermineChannelID(url.trim(), folder);
         progress=15; await job.progress(progress);
 
         // 2 step: check if there is a channel in database already
         const foundOne = await this.channelsService.getById(ID);
         progress=35; await job.progress(progress);
         // If so, throw an exception directly to the client
-        if (foundOne) throw 'Channel already exists in database';
+        if (foundOne && !shouldUpdate) throw 'Channel already exists in database';
+        // If found and should update, just update email
+        else if(foundOne && shouldUpdate) {
+            if(!email) throw 'No email specified for update';
+
+            progress=50; await job.progress(progress);
+            const updatedChannel = await this.channelModel.findByIdAndUpdate(ID, { email }, { new: true });
+            return updatedChannel;
+        }
 
         // 3 step: get main info about channel
         const mainInfo = await GetMainInfo(ID);

@@ -44,7 +44,7 @@ export async function GetMainInfo(channelID: string): Promise<any> {
 
             const channels = results[0].value.data.items;
             const lastVideo = results[2].value.data.items[0];
-            if (!channels) throw "No channel found."; 
+            if (!channels) throw "No channel found.";
 
             const { title, description, country, defaultLanguage, publishedAt } = channels[0].snippet;
             const { subscriberCount, viewCount, videoCount } = channels[0].statistics;
@@ -117,8 +117,8 @@ export async function YTScrapeLinks(identificator): Promise<object[]> {
     const page = await browser.newPage();
     await page.goto(`https://www.youtube.com/channel/${identificator}/about`, {waitUntil: 'load', timeout: 0});
     Logger.log('Waiting for selector', 'LinksScraper');
-    await page.waitForSelector("div#links-holder", { timeout: 5000 });
-    await page.waitForTimeout(0);
+    
+    await page.waitForSelector("div#links-holder");
   
     links = await page.evaluate(function () {
       return Array.from(

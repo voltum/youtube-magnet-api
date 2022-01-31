@@ -30,7 +30,7 @@ export class ChannelsService {
     }
 
     async getById(id: string): Promise<Channel> {
-        return this.channelModel.findById(id);
+        return await this.channelModel.findById(id);
     }
 
     async getStats(): Promise<Bull.JobCounts> {
@@ -38,25 +38,9 @@ export class ChannelsService {
         return this.channelsQueue.getJobCounts();
     }
 
-    async create(channel: CreateChannelDto, chunkStamp: number): Promise<Channel> {
-        const { url, folder } = channel;
-        // First, determine channel ID
-        const ID = await DetermineChannelID(url, folder);
-        Logger.log(ID, 'ChannelServiceID');
-        // Check if there is a channel in database already
-        const foundOne = await this.channelModel.findById(ID);
-        // If so, throw an exception directly to the client
-        if (foundOne) throw new HttpException('Duplication exception', HttpStatus.BAD_REQUEST);
-        // Else, get main info about channel
-        const mainInfo = await GetMainInfo(ID);
-
-        let probableLanguages;
-        if(mainInfo.description) probableLanguages = await cld.detect(mainInfo.description);
-        const language = probableLanguages?.languages[0].name ? probableLanguages?.languages[0].name : '';
-        
-        // Create a model with all info
-        const newChannel = new this.channelModel({_id: ID, folder, chunkStamp, language, ...mainInfo });
-        return newChannel.save();
+    async create(channel: CreateChannelDto, chunkStampParam: number): Promise<Bull.Job<any>> {
+        const { url, folder, chunkStamp } = channel;
+        return await this.channelsQueue.add({ id: url, url: url, folder: folder.toLowerCase(), chunkStamp: chunkStamp || chunkStampParam });
     }
 
     async save(channel: ChannelDocument): Promise<Channel> {
@@ -77,11 +61,11 @@ export class ChannelsService {
         return this.channelModel.findByIdAndUpdate(id, channel, { new: true }) // upsert: true/false
     }
 
-    async sendQueue(data: Array<string[]>, folder: string): Promise<Bull.Job<any>[]>{
+    async sendQueue(data: Array<string[]>, folder: string, shouldUpdate: boolean): Promise<Bull.Job<any>[]>{
         Logger.log(`Sending a job...`, 'ChannelsService')
         Logger.log(data, 'ChannelsService');
         const chunkStamp = Date.now();
-        return this.channelsQueue.addBulk(data.map(row => ({data: { id: row[0], url: row[0], folder, chunkStamp }})));
+        return this.channelsQueue.addBulk(data.map(row => ({data: { id: row[0], url: row[0], email: row[1], folder, chunkStamp, shouldUpdate }})));
     }
 
     async export(folder: string, @Res() res: Response) {

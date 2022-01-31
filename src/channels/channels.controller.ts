@@ -47,7 +47,7 @@ export class ChannelsController {
     @Post()
     @UseFilters(MongoExceptionFilter)
     @HttpCode(HttpStatus.CREATED)
-    create(@Body() channel: CreateChannelDto): Promise<Channel> {
+    create(@Body() channel: CreateChannelDto): Promise<Bull.Job<any>> {
         return this.channelsService.create(channel, Date.now());
     }
 
@@ -66,14 +66,14 @@ export class ChannelsController {
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     @UseFilters(MongoExceptionFilter)
-    uploadFile(@UploadedFile() file: Express.Multer.File, @Query('folder') folder: string): Promise<Bull.Job<any>[]> {
+    uploadFile(@UploadedFile() file: Express.Multer.File, @Query('folder') folder: string, @Query('shouldUpdate') shouldUpdate: boolean): Promise<Bull.Job<any>[]> {
         if(!folder) return; // TBD
         Logger.log('Uploading', 'ChannelsController')
 
         const data = fs.readFile(file.path, 'utf-8', (error, data) => {
             if(error) return; // TBD
             Logger.log(JSON.stringify(CSVToArray(data.trim(), ';')));
-            return this.channelsService.sendQueue(CSVToArray(data.trim(), ';'), folder.toLowerCase());
+            return this.channelsService.sendQueue(CSVToArray(data.trim(), ';'), folder.toLowerCase(), shouldUpdate);
 
         });
 
