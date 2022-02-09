@@ -5,25 +5,33 @@ import { Job, JobId, Queue } from "bull";
 import { ChannelsService } from "./channels.service";
 import { firstValueFrom } from "rxjs";
 import { EventsGateway } from "./channels.gateway";
-import { DetermineChannelID, GetMainInfo } from "src/utils/channels/channels";
+import { DetermineChannelID, GetMainInfo, YTCheckEmailCaptcha } from "src/utils/channels/channels";
 import { Channel, ChannelDocument } from "./schemas/channel.schema";
 import { Model } from "mongoose";
 import { InjectModel } from "@nestjs/mongoose";
+import { LogMessagesService } from "src/logMessages/logMessages.service";
 const cld = require('cld')
  
 @Processor('channels')
 export class ChannelsConsumer {
 
-    constructor(private readonly channelsService: ChannelsService, @InjectModel(Channel.name) private channelModel: Model<ChannelDocument>, private readonly httpService: HttpService, private readonly eventsGateway: EventsGateway, @InjectQueue('channels') private channelsQueue: Queue){
+    constructor(
+        private readonly channelsService: ChannelsService,
+        private readonly logMessagesService: LogMessagesService,
+        @InjectModel(Channel.name) private channelModel: Model<ChannelDocument>, 
+        private readonly httpService: HttpService,
+        private readonly eventsGateway: EventsGateway,
+        @InjectQueue('channels') private channelsQueue: Queue){
     }
     
     @Process()
-    async readOperationJob(job:Job<{id: string, url: string, email: string, folder: string, chunkStamp: number, shouldUpdate: string}>): Promise<Channel>{
-        const { id, url, email, folder, chunkStamp, shouldUpdate: shouldUpdateString } = job.data;
+    async readOperationJob(job:Job<{id: string, url: string, email: string, folder: string, chunkStamp: number, shouldUpdate: string, skipMedia: boolean}>): Promise<Channel>{
+        const { id, url, email, folder, chunkStamp, shouldUpdate: shouldUpdateString, skipMedia = false } = job.data;
         let progress = 0;
         
         let shouldUpdate: boolean = (shouldUpdateString === 'true');
         Logger.log(`Should update: ${shouldUpdate}`, 'Job');
+        Logger.log(`URL: ${url.trim()}`, 'Job');
 
         // 1 step: determine channel ID
         const ID = await DetermineChannelID(url.trim(), folder);
@@ -42,12 +50,15 @@ export class ChannelsConsumer {
             const updatedChannel = await this.channelModel.findByIdAndUpdate(ID, { email }, { new: true });
             return updatedChannel;
         }
+        // 3 step: check if email catcha exists
+        const emailExists = await YTCheckEmailCaptcha(ID);
+        progress=45; await job.progress(progress);
 
-        // 3 step: get main info about channel
-        const mainInfo = await GetMainInfo(ID);
+        // 4 step: get main info about channel
+        const mainInfo = await GetMainInfo(ID, { skipMedia });
         progress=80; await job.progress(progress);
 
-        // 4 step: detect channel language
+        // 5 step: detect channel language
         let language = null;
         try{
             const probableLanguages = mainInfo.description ? await cld.detect(mainInfo.description) : null;
@@ -57,7 +68,7 @@ export class ChannelsConsumer {
         }
         progress=90; await job.progress(progress);
 
-        const result = await this.channelsService.save(new this.channelModel({ _id: ID, folder, chunkStamp, language, ...mainInfo }));
+        const result = await this.channelsService.save(new this.channelModel({ _id: ID, emailExists, folder, chunkStamp, language, ...mainInfo }));
         progress=100; await job.progress(progress);
 
         this.eventsGateway.server.emit('events:progress', `Channel '${mainInfo.title}' analysis is done`);
@@ -68,21 +79,21 @@ export class ChannelsConsumer {
 
     @OnQueueActive()
     async onActive(job: Job){
-        const remain = await this.channelsQueue.getActiveCount();
-        this.eventsGateway.server.emit('events:active', { id: job.data.id, remain });
+        const remainedCount = await this.channelsQueue.getWaitingCount();
+        this.eventsGateway.server.emit('events:active', { job, remainedCount });
         
         Logger.log(`Processing job ${job.data.id}...`, 'QueueProcessor');
     }
 
     @OnQueueProgress()
-    onProgress(job: Job, progress: number){
-        this.eventsGateway.server.emit('events:progress', { id: job.data.id, progress });
+    async onProgress(job: Job, progress: number){
+        const remainedCount = await this.channelsQueue.getWaitingCount();
+        this.eventsGateway.server.emit('events:progress', { id: job.data.id, progress, remainedCount });
     }
 
     @OnQueueCompleted()
     async onQueueCompleted(jobId: number, result: any) {
-        const job = await this.channelsQueue.getJob(jobId);
-        this.eventsGateway.server.emit('events:completed', result);
+        this.eventsGateway.server.emit('events:completed', { job: result });
         Logger.log('Job completed ' + jobId, 'ChannelsConsumer');
     }
 
@@ -93,9 +104,10 @@ export class ChannelsConsumer {
     }
 
     @OnQueueFailed()
-    onFail(job: Job, error: Error){
+    async onFail(job: Job, error: Error){
         this.eventsGateway.server.emit('events:error', `'${job.data.id}': ${error}`);
         this.eventsGateway.server.emit('events:inactive', { id: job.data.id });
+        await this.logMessagesService.create({ url: job.data.id, text: String(error), folder: job.data.folder, status: String(error) }, job.data.chunkStamp);
         Logger.error(error, 'ChannelsConsumer');
     }
     

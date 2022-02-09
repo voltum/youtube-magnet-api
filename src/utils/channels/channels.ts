@@ -23,19 +23,24 @@ export async function DetermineChannelID(url: string, folder: string) {
         if(ID)
             identificator = ID;
         else
-            throw "Invalid url provided: invalid path";
+            throw "Invalid url or timeout";
     }
 
     Logger.log('Identificator determination: SUCCESS', 'ChannelTypeMiddleware');
 
     return identificator;
 }
-export async function GetMainInfo(channelID: string): Promise<any> {
+
+interface GetMainInfoInterface{
+  (channelID: string, { skipMedia }?: any): any
+}
+
+export async function GetMainInfo( channelID: string, { skipMedia }: { skipMedia?: boolean} = {}): Promise<any> {
     const key = 'AIzaSyBquyODQDQl7mf82awWwWZzAUqYBkTRMgQ';
 
     return await Promise.allSettled([
       YTGetChannelInfo(String(channelID), ['id', 'snippet','contentDetails','statistics'], key), 
-      YTScrapeLinks(channelID),
+      YTScrapeLinks(channelID, skipMedia),
       YTLastVideo(channelID, ['snippet'], key)
     ])
     .then((results) => {
@@ -69,7 +74,7 @@ export async function GetMainInfo(channelID: string): Promise<any> {
             }
         } 
         else {
-          throw 'Youtube API calls error';
+          throw `Youtube API calls error: ${results[0].status === 'rejected' ? 'Maininfo' : results[1].status === 'rejected' ? 'Social links' : results[2].status === 'rejected' ? 'Last video' : 'undefined'}`;
         }
     })
     .catch((error) => {
@@ -81,7 +86,10 @@ export async function GetMainInfo(channelID: string): Promise<any> {
 export async function YTGetID(url: string): Promise<string> {
   const browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", 
+    "--disable-setuid-sandbox", 
+    // "--user-data-dir=/config/chromium"
+  ],
   });
 
   const selector = "meta[itemprop='channelId']";
@@ -89,11 +97,29 @@ export async function YTGetID(url: string): Promise<string> {
 
   try{
     const page = await browser.newPage();
-    await page.goto(url, {waitUntil: 'load', timeout: 0});
-    Logger.log('Waiting for selector', 'IDScraper');
-    await page.waitForSelector(selector, { timeout: 5000 });
+    await page.goto(url, { waitUntil: 'load', timeout: 0 });
 
-    id = await page.evaluate(function () {
+    Logger.log('Waiting for selectors', 'IDScraper');
+
+    const current_URL = await page.evaluate(() => {
+      return document.URL;
+    });
+
+    Logger.log(current_URL, "AcceptButton");
+
+    if(current_URL !== url) {
+      // There is a cookies page, so click "I accept" button
+      await page.waitForSelector("[aria-label='Agree to the use of cookies and other data for the purposes described']", { timeout: 3000 });
+
+      await page.evaluate(() => {
+        const button =  <HTMLElement>document.querySelector("[aria-label='Agree to the use of cookies and other data for the purposes described']");
+        button.click();
+      });
+    }
+
+    await page.waitForSelector(selector, { timeout: 7000 });
+
+    id = await page.evaluate(() => {
       const meta = <HTMLMetaElement>document.querySelector("meta[itemprop='channelId']");
       return meta.content;
     });
@@ -106,10 +132,15 @@ export async function YTGetID(url: string): Promise<string> {
     return id;
   }
 }
-export async function YTScrapeLinks(identificator): Promise<object[]> {
+export async function YTScrapeLinks(identificator, skip: boolean = false): Promise<object[]> {
+  if(skip) return;
+
   const browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    args: ["--no-sandbox", 
+    "--disable-setuid-sandbox", 
+    // "--user-data-dir=/config/chromium"
+  ],
   });
   let links = null;
 
@@ -134,6 +165,48 @@ export async function YTScrapeLinks(identificator): Promise<object[]> {
     await browser.close();
     return links;
   }
+
+}
+export async function YTCheckEmailCaptcha(identificator): Promise<boolean | undefined> {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox", 
+    // "--user-data-dir=/config/chromium"
+  ],
+  });
+  let captchaExists;
+  let recaptcha = null;
+
+  try{
+    const page = await browser.newPage();
+    await page.goto(`https://www.youtube.com/channel/${identificator}/about`, { waitUntil: 'load', timeout: 0 });
+
+    Logger.log('Waiting for email selector', 'EmailCaptchaScraper');
+    
+    try{
+      await page.waitForSelector('#recaptcha', { timeout: 5000 });
+    
+      captchaExists = await page.evaluate(() => {
+        const parentElement:HTMLElement = document.querySelector("#recaptcha").parentElement.previousElementSibling.previousElementSibling as HTMLElement;
+        return !parentElement.hidden;
+      });
+
+      Logger.log(recaptcha, 'EmailCaptchaScraper')
+    } catch(error) {
+      // Ignore
+      Logger.error('Error while scraping email captcha: ' + error, 'EmailCaptchaScraper')
+    }
+
+    Logger.log(`Captcha with email: ${captchaExists}`, 'EmailCaptchaScraper')
+
+    await browser.close();
+  } catch (e) {
+    Logger.log(e, 'YTScrapeLinks');
+  } finally {
+    await browser.close();
+    return captchaExists;
+  }
+
 }
 export function YTGetChannelInfo(id:string, part: string[], key: string) {
   Logger.log('Youtube API call', 'ChannelInfo');
@@ -154,7 +227,8 @@ export function YTLastVideo(id: string, part: string[], key: string) {
 }
 export function EmailFinder(text: string, context?: string){
   const matches = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
-  if(matches) Logger.log(`Email found in ${context ? context : 'the given context'}`, 'EmailFinder');
-  else Logger.log(`Email not found in ${context ? context : 'the given context'}`, 'EmailFinder');
+
+  Logger.log(`Email ${matches ? 'found' : 'not found'} in ${context || 'the given context'}`, 'EmailFinder');
+
   return matches ? matches[0] : null;
 }

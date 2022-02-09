@@ -7,11 +7,13 @@ import { AppService } from './app.service';
 import { FoldersModule } from './folders/folders.module';
 import { ConfigModule } from '@nestjs/config';
 import configuration from './config/configuration';
+import { LogMessagesModule } from './logMessages/logMessages.module';
 
 @Module({
   imports: [
     ChannelsModule,
     FoldersModule,
+    LogMessagesModule,
     MongooseModule.forRoot('mongodb+srv://admin_ytmagnet:-Aa4RrAxPST7gMC@youtubemagnet.jkh1h.mongodb.net/YoutubeMagnet?retryWrites=true&w=majority',
       {
         
@@ -19,7 +21,7 @@ import configuration from './config/configuration';
     ),
     BullModule.forRoot({
       redis: {
-        host: 'redisdb',
+        host: 'localhost',
         port: 6379,
       }
     }),

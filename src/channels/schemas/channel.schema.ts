@@ -12,6 +12,7 @@ export class Channel {
     @Prop() url: String
     @Prop() description: String
     @Prop() email: String
+    @Prop() emailExists: Boolean
     @Prop() country: String
     @Prop() language: String // Language detected
     @Prop() defaultLanguage: String // From youtube

@@ -39,6 +39,7 @@ export class ChannelsService {
     }
 
     async create(channel: CreateChannelDto, chunkStampParam: number): Promise<Bull.Job<any>> {
+        Logger.log("Post single request", 'ChannelsService');
         const { url, folder, chunkStamp } = channel;
         return await this.channelsQueue.add({ id: url, url: url, folder: folder.toLowerCase(), chunkStamp: chunkStamp || chunkStampParam });
     }
@@ -73,7 +74,7 @@ export class ChannelsService {
 
         const all = await this.getAll(folder);
   
-        var fields = ['title', 'url', 'email', 'language', 'viewCount', 'videoCount', 'subscriberCount', 'lastVideoPublishedAt', 'publishedAt'];
+        var fields = ['title', 'url', 'email', 'emailExists', 'language', 'viewCount', 'videoCount', 'subscriberCount', 'lastVideoPublishedAt', 'publishedAt'];
 
         const date = new Date();
         const filename = `export-${folder}-${(new Date().toJSON().slice(0,10))}.csv`;

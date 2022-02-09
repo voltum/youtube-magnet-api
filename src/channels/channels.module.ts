@@ -11,6 +11,8 @@ import { ChannelsMiddleware } from './channels.middleware';
 import { ChannelsService } from './channels.service';
 import { Channel, ChannelSchema } from './schemas/channel.schema';
 import { EventsGateway } from './channels.gateway';
+import { LogMessagesService } from 'src/logMessages/logMessages.service';
+import { LogMessagesModule } from 'src/logMessages/logMessages.module';
 
 @Module({
     imports: [
@@ -20,14 +22,15 @@ import { EventsGateway } from './channels.gateway';
         BullModule.registerQueue({
             name: 'channels',
             redis: {
-                host: 'redisdb',
+                host: 'localhost',
                 port: 6379
             }
         }),
         MulterModule.register({
             dest: './upload',
         }),
-        HttpModule
+        HttpModule,
+        LogMessagesModule
     ],
     providers: [ChannelsService, ChannelsConsumer, EventsGateway],
     controllers: [ChannelsController],

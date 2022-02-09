@@ -4,6 +4,8 @@ RUN mkdir -p /workspace
 
 WORKDIR /workspace
 
+RUN mkdir -p /config/chromium
+
 RUN apt-get update && \
     apt-get install -y \
     ca-certificates \
