@@ -13,6 +13,7 @@ import { Channel, ChannelSchema } from './schemas/channel.schema';
 import { EventsGateway } from './channels.gateway';
 import { LogMessagesService } from 'src/logMessages/logMessages.service';
 import { LogMessagesModule } from 'src/logMessages/logMessages.module';
+import configuration from 'src/config/configuration';
 
 @Module({
     imports: [
@@ -22,8 +23,8 @@ import { LogMessagesModule } from 'src/logMessages/logMessages.module';
         BullModule.registerQueue({
             name: 'channels',
             redis: {
-                host: 'localhost',
-                port: 6379
+                host: configuration().getRedisHost(),
+                port: configuration().getRedisPort(),
             }
         }),
         MulterModule.register({

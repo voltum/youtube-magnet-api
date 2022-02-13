@@ -1,5 +1,6 @@
 import { Logger } from "@nestjs/common";
 import { google } from 'googleapis';
+import configuration from "src/config/configuration";
 const puppeteer = require('puppeteer');
 var service = google.youtube('v3');
 
@@ -88,7 +89,7 @@ export async function YTGetID(url: string): Promise<string> {
     headless: true,
     args: ["--no-sandbox", 
     "--disable-setuid-sandbox", 
-    // "--user-data-dir=/config/chromium"
+    `--user-data-dir=${configuration().getUserDataDir()}`
   ],
   });
 
@@ -139,7 +140,7 @@ export async function YTScrapeLinks(identificator, skip: boolean = false): Promi
     headless: true,
     args: ["--no-sandbox", 
     "--disable-setuid-sandbox", 
-    // "--user-data-dir=/config/chromium"
+    `--user-data-dir=${configuration().getUserDataDir()}`
   ],
   });
   let links = null;
@@ -171,7 +172,7 @@ export async function YTCheckEmailCaptcha(identificator): Promise<boolean | unde
   const browser = await puppeteer.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox", 
-    // "--user-data-dir=/config/chromium"
+    `--user-data-dir=${configuration().getUserDataDir()}`
   ],
   });
   let captchaExists;

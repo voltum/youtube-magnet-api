@@ -21,8 +21,8 @@ import { LogMessagesModule } from './logMessages/logMessages.module';
     ),
     BullModule.forRoot({
       redis: {
-        host: 'localhost',
-        port: 6379,
+        host: configuration().getRedisHost(),
+        port: configuration().getRedisPort(),
       }
     }),
     ConfigModule.forRoot({
