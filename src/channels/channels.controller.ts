@@ -2,7 +2,7 @@ import { Controller, Param, Get, Post, Body, Delete, Put, HttpCode, HttpStatus, 
 import { Express, Response } from 'express'
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ChannelsService } from './channels.service';
-import { ChannelDto } from './dto/channel.dto';
+import { ChannelDto, ChannelUpdateQuery } from './dto/channel.dto';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { UpdateChannelDto } from './dto/update-channel.dto';
 import { Channel } from './schemas/channel.schema';
@@ -11,6 +11,8 @@ import { CSVToArray } from 'src/utils/channels/functions';
 import Bull from 'bull';
 import { format } from '@fast-csv/format';
 import { MongoExceptionFilter } from 'src/exceptions/mongo-exception.filter';
+import configuration from 'src/config/configuration';
+const puppeteer = require('puppeteer');
 
 @Controller('channels')
 export class ChannelsController {
@@ -27,15 +29,15 @@ export class ChannelsController {
 
     @Get('export')
     @UseFilters(MongoExceptionFilter)
-    export(@Query('folder') folder: string, @Res() res: Response) {
-        return this.channelsService.export(folder?.toLowerCase(), res);
+    export(@Query('folder') folder: string, @Query('blacklist') blacklist: string, @Res() res: Response) {
+        return this.channelsService.export(folder?.toLowerCase(), blacklist, res);
     }
 
     @Get()
     @UseFilters(MongoExceptionFilter)
-    getAll(@Query('folder') folder: string): Promise<Channel[]> {
+    getAll(@Query('folder') folder: string, @Query('blacklist') blacklist: string, @Query('filter') filterOptions?: string): Promise<Channel[]> {
         Logger.log(`Folder: ${folder?.toLowerCase()}`, 'ChannelsController')
-        return this.channelsService.getAll(folder?.toLowerCase())
+        return this.channelsService.getAll(folder?.toLowerCase(), blacklist, filterOptions)
     }
 
     @Get(':id')
@@ -53,27 +55,34 @@ export class ChannelsController {
 
     @Delete(':id')
     @UseFilters(MongoExceptionFilter)
-    remove(@Param('id') id: string): Promise<Channel>{
-        return this.channelsService.remove(id);
+    remove(@Param('id') id: string, @Query('from') fromFolder: string): Promise<Channel> {
+        return this.channelsService.remove(id, fromFolder);
     }
 
     @Put()
     @UseFilters(MongoExceptionFilter)
-    update(@Query('id') id: string, @Body() channel: ChannelDto): Promise<Channel>{
-        return this.channelsService.update(id, channel);
+    update(@Query('id') id: string, @Body() channelUpdateQuery: ChannelUpdateQuery): Promise<Channel> {
+        return this.channelsService.update(id, channelUpdateQuery.update, channelUpdateQuery.options);
     }
 
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     @UseFilters(MongoExceptionFilter)
-    uploadFile(@UploadedFile() file: Express.Multer.File, @Query('folder') folder: string, @Query('shouldUpdate') shouldUpdate: boolean): Promise<Bull.Job<any>[]> {
+    uploadFile(
+        @UploadedFile() file: Express.Multer.File,
+        @Query('folder') folder: string,
+        @Query('shouldUpdate') shouldUpdate: boolean,
+        @Query('shouldBlock') shouldBlock: string,
+        @Query('delimeter') delimeter: string
+    ): Promise<Bull.Job<any>[]> {
         if(!folder) return; // TBD
-        Logger.log('Uploading', 'ChannelsController')
+        Logger.log('Uploading', 'ChannelsController');
 
-        const data = fs.readFile(file.path, 'utf-8', (error, data) => {
+        fs.readFile(file.path, 'utf-8', (error, data) => {
             if(error) return; // TBD
-            Logger.log(JSON.stringify(CSVToArray(data.trim(), ';')));
-            return this.channelsService.sendQueue(CSVToArray(data.trim(), ';'), folder.toLowerCase(), shouldUpdate);
+            // Logger.log(JSON.stringify(CSVToArray(data.trim(), delimeter || ';')));
+            Logger.log("Should block: " + shouldBlock + " " + typeof shouldBlock)
+            return this.channelsService.sendQueue(CSVToArray(data.trim(), delimeter || ';'), folder.toLowerCase(), { onlyEmail: shouldUpdate, shouldBlock: shouldBlock === 'true' ? true : false });
 
         });
 

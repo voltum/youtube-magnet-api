@@ -5,12 +5,16 @@ export type FolderDocument = Folder & Document
 
 @Schema()
 export class Folder {
-    @Prop()
-    _id: String
+    // @Prop()
+    // _id: String
     @Prop({ required: true })
-    name: String
+    name: string
     @Prop()
-    code: String
+    code: string
+    @Prop()
+    parent: string
+    @Prop()
+    category: string
     @Prop()
     createdAt: Date
 }

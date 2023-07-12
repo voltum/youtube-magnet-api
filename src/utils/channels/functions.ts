@@ -80,3 +80,7 @@ export function CSVToArray( strData, strDelimiter ){
     // Return the parsed data.
     return( arrData );
 }
+export function getRootFolderName(path: string): string | null{
+    const rootDir = path.match(/[^/\\]+/) || [null];
+    return rootDir[0];
+}

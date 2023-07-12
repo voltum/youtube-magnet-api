@@ -3,28 +3,37 @@ import { Document } from "mongoose";
 
 export type ChannelDocument = Channel & Document
 
+export type FolderType = {
+    name: string;
+    chunkStamp: number,
+    note?: string,
+    blocked: boolean
+}
+
 @Schema({ timestamps: true })
 export class Channel {
-    @Prop() _id: String
-    @Prop() folder: string
-    // @Prop() status: string
-    @Prop() title: String
-    @Prop() url: String
-    @Prop() description: String
-    @Prop() email: String
-    @Prop() emailExists: Boolean
-    @Prop() country: String
-    @Prop() language: String // Language detected
-    @Prop() defaultLanguage: String // From youtube
-    @Prop() subscriberCount: Number
-    @Prop() socialLinks: String
-    @Prop() viewCount: Number
-    @Prop() videoCount: Number
+    // UNIVERSAL VALUES
+    @Prop() _id: string
+    @Prop() blocked: boolean
+    @Prop() title: string
+    @Prop() url: string
+    @Prop() description: string
+    @Prop() email: string
+    @Prop() emailExists: boolean
+    @Prop() country: string
+    @Prop() language: string // Language detected
+    @Prop() defaultLanguage: string // From youtube
+    @Prop() subscriberCount: number
+    @Prop() socialLinks: string
+    @Prop() viewCount: number
+    @Prop() videoCount: number
     @Prop() lastVideoPublishedAt: Date
     @Prop() publishedAt: Date
-    @Prop() chunkStamp: Number
     @Prop() createdAt: Date
     @Prop() updatedAt: Date
+    @Prop() globalNote: string
+    // CONDITIONAL VALUES
+    @Prop() folders: FolderType[] // Nested
 }
 
 export const ChannelSchema = SchemaFactory.createForClass(Channel);

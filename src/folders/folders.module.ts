@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { forwardRef, Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 import { ChannelsModule } from "src/channels/channels.module";
 import { FoldersController } from "./folders.controller";
@@ -10,10 +10,11 @@ import { Folder, FolderSchema } from "./schemas/folder.schema";
         MongooseModule.forFeature([
             {name: Folder.name, schema: FolderSchema}
         ]),
-        ChannelsModule
+        forwardRef(() => ChannelsModule)
     ],
     providers: [FoldersService],
-    controllers: [FoldersController]
+    controllers: [FoldersController],
+    exports: [FoldersService]
 })
 export class FoldersModule {
     

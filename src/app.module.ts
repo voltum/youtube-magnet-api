@@ -23,7 +23,7 @@ import { LogMessagesModule } from './logMessages/logMessages.module';
       redis: {
         host: configuration().getRedisHost(),
         port: configuration().getRedisPort(),
-      }
+      },
     }),
     ConfigModule.forRoot({
       load: [configuration]

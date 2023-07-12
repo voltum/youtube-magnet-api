@@ -1,7 +1,7 @@
 import { Logger } from "@nestjs/common";
 
 export default () => {
-  const { PORT, REDIS_HOST, REDIS_PORT, USER_DATA_DIR } = process.env;
+  const { PORT, REDIS_HOST, REDIS_PORT, USER_DATA_DIR, YOUTUBE_API_KEY } = process.env;
 
   return {
     port: parseInt(PORT, 10) || 3000,
@@ -10,6 +10,7 @@ export default () => {
       return USER_DATA_DIR || '.'
     }, 
     getRedisHost: () => REDIS_HOST || 'localhost',
-    getRedisPort: () => Number(REDIS_PORT) || 6379
+    getRedisPort: () => Number(REDIS_PORT) || 6379,
+    getYoutubeApiKey: () => YOUTUBE_API_KEY || 'AIzaSyBquyODQDQl7mf82awWwWZzAUqYBkTRMgQ'
   }
 };

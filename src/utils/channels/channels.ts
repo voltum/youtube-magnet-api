@@ -37,7 +37,7 @@ interface GetMainInfoInterface{
 }
 
 export async function GetMainInfo( channelID: string, { skipMedia }: { skipMedia?: boolean} = {}): Promise<any> {
-    const key = 'AIzaSyBquyODQDQl7mf82awWwWZzAUqYBkTRMgQ';
+    const key = configuration().getYoutubeApiKey();
 
     return await Promise.allSettled([
       YTGetChannelInfo(String(channelID), ['id', 'snippet','contentDetails','statistics'], key), 
@@ -106,14 +106,14 @@ export async function YTGetID(url: string): Promise<string> {
       return document.URL;
     });
 
-    Logger.log(current_URL, "AcceptButton");
+    Logger.log(current_URL, "RejectButton");
 
     if(current_URL !== url) {
-      // There is a cookies page, so click "I accept" button
-      await page.waitForSelector("[aria-label='Agree to the use of cookies and other data for the purposes described']", { timeout: 3000 });
+      // There is a cookies page, so click "Reject all" button
+      await page.waitForSelector("[aria-label='Reject all']", { timeout: 3000 });
 
       await page.evaluate(() => {
-        const button =  <HTMLElement>document.querySelector("[aria-label='Agree to the use of cookies and other data for the purposes described']");
+        const button =  <HTMLElement>document.querySelector("[aria-label='Reject all']");
         button.click();
       });
     }
