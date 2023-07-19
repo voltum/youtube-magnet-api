@@ -4,6 +4,12 @@ import configuration from "src/config/configuration";
 const puppeteer = require('puppeteer');
 var service = google.youtube('v3');
 
+declare global {
+  interface Window { // ⚠️ notice that "Window" is capitalized here
+    ytInitialData: any;
+  }
+}
+
 // Main middleware-like functions
 export async function DetermineChannelID(url: string, folder: string) {
 
@@ -93,14 +99,13 @@ export async function YTGetID(url: string): Promise<string> {
   ],
   });
 
-  const selector = "meta[itemprop='channelId']";
   let id = null;
 
   try{
     const page = await browser.newPage();
     await page.goto(url, { waitUntil: 'load', timeout: 0 });
 
-    Logger.log('Waiting for selectors', 'IDScraper');
+    Logger.log('Waiting for page load', 'IDScraper');
 
     const current_URL = await page.evaluate(() => {
       return document.URL;
@@ -108,7 +113,9 @@ export async function YTGetID(url: string): Promise<string> {
 
     Logger.log(current_URL, "RejectButton");
 
-    if(current_URL !== url) {
+    const isOtherPage = current_URL !== url;
+
+    if (isOtherPage) {
       // There is a cookies page, so click "Reject all" button
       await page.waitForSelector("[aria-label='Reject all']", { timeout: 3000 });
 
@@ -118,11 +125,11 @@ export async function YTGetID(url: string): Promise<string> {
       });
     }
 
-    await page.waitForSelector(selector, { timeout: 7000 });
+    if (isOtherPage) await page.goto(url, { waitUntil: 'load', timeout: 0 });
 
     id = await page.evaluate(() => {
-      const meta = <HTMLMetaElement>document.querySelector("meta[itemprop='channelId']");
-      return meta.content;
+      const searchParam = new URL(window.ytInitialData.metadata.channelMetadataRenderer.rssUrl).searchParams;
+      return searchParam.get("channel_id");
     });
    
     await browser.close();
