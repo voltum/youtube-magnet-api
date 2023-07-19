@@ -123,6 +123,8 @@ export async function YTGetID(url: string): Promise<string> {
         const button =  <HTMLElement>document.querySelector("[aria-label='Reject all']");
         button.click();
       });
+
+      await page.waitForTimeout(2000);
     }
 
     if (isOtherPage) await page.goto(url, { waitUntil: 'load', timeout: 0 });
