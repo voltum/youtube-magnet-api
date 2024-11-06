@@ -11,7 +11,7 @@ export default () => {
     }, 
     getRedisHost: () => REDIS_HOST || 'localhost',
     getRedisPort: () => Number(REDIS_PORT) || 6379,
-    getYoutubeApiKey: () => YOUTUBE_API_KEY || 'AIzaSyBquyODQDQl7mf82awWwWZzAUqYBkTRMgQ'
+    getYoutubeApiKey: () => YOUTUBE_API_KEY || 'AIzaSyBquyODQDQl7mf82awWwWZzAUqYBkTRMgQ',
     getMongoDBString: () => MONGODB_STRING,
   }
 };
